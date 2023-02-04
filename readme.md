@@ -8,7 +8,11 @@ This script will connect to a server, deploy and state sync a canto node and the
 
 2) edit `hosts` to contain your intended hostname and the ip address of the target server
 
-3) Run the playbook
+3) Run the playbook You'll probably have to install Ansible
+
+```
+ansible-playbook -i hosts canto.yml
+```
 
 4) now that the playbook has finished login to your server and run the following, follow the prompts to get a certificate, remmeber you need to point your domain name at the servers IP address!
 
