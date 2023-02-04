@@ -1,0 +1,206 @@
+worker_processes  5;  ## Default: 1
+error_log  /var/log/error.log;
+worker_rlimit_nofile 8192;
+
+events {
+  worker_connections  4096;  ## Default: 1024
+}
+
+
+http {
+  index    index.html index.htm index.php;
+
+  default_type application/octet-stream;
+  log_format   main '$remote_addr - $remote_user [$time_local]  $status '
+    '"$request" $body_bytes_sent "$http_referer" '
+    '"$http_user_agent" "$http_x_forwarded_for" ';
+  access_log   /var/log/nginx/access.log  main;
+  sendfile     on;
+  tcp_nopush   on;
+  server_names_hash_bucket_size 128; # this seems to be required for some vhosts
+  map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+  }
+
+  server {
+  listen 443 ssl;
+  server_name {{domain}};
+
+  ssl_certificate fullchain.pem;
+  ssl_certificate_key privkey.pem;
+  ssl_session_cache shared:SSL:10m;
+
+    location / {
+
+        proxy_pass http://127.0.0.1:8544;
+        proxy_set_header Host $host;
+        proxy_set_header            X-Real-IP $remote_addr;
+        proxy_http_version          1.1;
+        proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header            X-Forwarded-Proto http;
+
+        proxy_redirect http:// https://;
+    }
+  }
+  server {
+  listen 8545 ssl;
+  server_name {{domain}};
+
+  ssl_certificate fullchain.pem;
+  ssl_certificate_key privkey.pem;
+  ssl_session_cache shared:SSL:10m;
+
+    location / {
+
+        proxy_pass http://127.0.0.1:8544;
+        proxy_set_header Host $host;
+        proxy_set_header            X-Real-IP $remote_addr;
+        proxy_http_version          1.1;
+        proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header            X-Forwarded-Proto http;
+
+        proxy_redirect http:// https://;
+    }
+  }
+  server {
+  listen 8546 ssl;
+  server_name {{domain}};
+
+  ssl_certificate fullchain.pem;
+  ssl_certificate_key privkey.pem;
+  ssl_session_cache shared:SSL:10m;
+    location / {
+        proxy_pass http://127.0.0.1:8547/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_redirect ws:// wss://;
+    }
+  }
+
+  server {
+
+  listen 1317 ssl;
+  server_name {{domain}};
+
+  ssl_certificate fullchain.pem;
+  ssl_certificate_key privkey.pem;
+  ssl_session_cache shared:SSL:10m;
+
+    location / {
+
+        proxy_pass http://127.0.0.1:1316;
+        proxy_set_header Host $host;
+        proxy_set_header            X-Real-IP $remote_addr;
+        proxy_http_version          1.1;
+        proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header            X-Forwarded-Proto http;
+
+        proxy_redirect http:// https://;
+    }
+  }
+
+  server {
+
+  listen 443 ssl;
+  server_name {{domain}};
+
+  ssl_certificate fullchain.pem;
+  ssl_certificate_key privkey.pem;
+  ssl_session_cache shared:SSL:10m;
+
+
+    location / {
+
+        proxy_pass http://127.0.0.1:26655;
+        proxy_set_header Host $host;
+        proxy_set_header            X-Real-IP $remote_addr;
+        proxy_http_version          1.1;
+        proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header            X-Forwarded-Proto http;
+
+        proxy_redirect http:// https://;
+    }
+
+    location /websocket {
+        proxy_pass http://127.0.0.1:26655/websocket;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_redirect ws:// wss://;
+    }
+  }
+
+  server {
+
+  listen 26657 ssl;
+  server_name {{domain}};
+
+  
+  ssl_certificate fullchain.pem;
+  ssl_certificate_key privkey.pem;
+  ssl_session_cache shared:SSL:10m;
+
+
+    location / {
+
+        proxy_pass http://127.0.0.1:26655;
+        proxy_set_header Host $host;
+        proxy_set_header            X-Real-IP $remote_addr;
+        proxy_http_version          1.1;
+        proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header            X-Forwarded-Proto http;
+
+        proxy_redirect http:// https://;
+    }
+
+    location /websocket {
+        proxy_pass http://127.0.0.1:26655/websocket;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_redirect ws:// wss://;
+    }
+  }
+  server {
+
+  listen 9090 http2;
+  server_name {{domain}};
+
+  grpc_ssl_certificate fullchain.pem;
+  grpc_ssl_certificate_key privkey.pem;
+  grpc_ssl_session_reuse on;
+  grpc_ssl_protocols TLSv1.2;
+
+
+    location / {
+
+        grpc_pass grpc://[::]:9092;
+        
+    }
+  }
+  server {
+
+  listen 9091 ssl;
+  server_name {{domain}};
+
+  ssl_certificate fullchain.pem;
+  ssl_certificate_key privkey.pem;
+  ssl_session_cache shared:SSL:10m;
+
+
+    location / {
+
+        proxy_pass http://127.0.0.1:9093;
+        proxy_set_header Host $host;
+        proxy_set_header            X-Real-IP $remote_addr;
+        proxy_http_version          1.1;
+        proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header            X-Forwarded-Proto http;
+
+        proxy_redirect http:// https://;
+    }
+
+  }
+}

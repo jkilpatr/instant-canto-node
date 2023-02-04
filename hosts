@@ -1,0 +1,4 @@
+[canto]
+1.1.1.1 hostname="hostname-here" ansible_python_interpreter=/usr/bin/python3
+[canto:vars]
+domain="mydomain"

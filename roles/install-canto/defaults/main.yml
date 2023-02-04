@@ -1,0 +1,28 @@
+canto_version: "v5.0.0"
+release: "https://updates.althea.net/canto-{{canto_version}}"
+moniker: instant-canto-rpc-cluster
+chain_id: canto_7700-1
+legacy_api: "true"
+legacy_api_port: 1316
+rpc_port: 26655
+
+#state
+pruning_state: "custom"
+pruning_keep_recent: 1
+pruning_keep_every: 1000
+pruning_interval: 10
+#statesync
+state_sync_enabled: false
+statesync_rpc_servers: "http://chainripper-2.althea.net:20878,https://canto-rpc.polkachu.com:443,https://rpc.canto.nodestake.top:443"
+statesync_height: "{{ latest_block | default(0) | int }}"
+statesync_hash: "{{ latest_block_hash | default('') }}"
+statesync_snapshot_interval: 1000
+
+#peering
+seeds: "ade4d8bc8cbe014af6ebdf3cb7b1e9ad36f412c0@seeds.polkachu.com:15556"
+persistant_peers: "0b774bcf73445c86e578abfbd66b8b44df63db68@65.19.136.133:26856"
+
+#snapshot to bootstrap, canto does not allow state sync from scratch
+snapshot_url: "https://updates.althea.net/canto-snapshot.tar.xz"
+
+canto_home: "/root/.cantod/"

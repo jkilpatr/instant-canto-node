@@ -1,0 +1,74 @@
+# Known requirements per distro, please expand if you encounter breakage
+known_distros:
+  - CentOS
+  - Fedora
+  - Ubuntu
+  - Debian
+  - Red Hat Enterprise Linux
+  - Arch Linux
+
+debian_deps:
+  - iptables-persistent
+  - logrotate
+  - vim
+  - rsync
+  - htop
+  - fail2ban
+  - tmux
+  - certbot
+  - python3-certbot-nginx
+  - python3-certbot-dns-cloudflare
+  - nginx
+
+centos_deps:
+  - iptables-services
+  - logrotate
+  - vim
+  - rsync
+  - htop
+  - fail2ban
+  - initscripts
+  - tmux
+  - certbot
+  - python3-certbot-nginx
+  - python3-certbot-dns-cloudflare
+  - nginx
+  
+ubuntu_deps:
+  - iptables-persistent
+  - logrotate
+  - vim
+  - rsync
+  - htop
+  - fail2ban
+  - tmux
+  - certbot
+  - python3-certbot-nginx
+  - certbot-dns-cloudflare
+  - nginx
+
+fedora_deps:
+  - logrotate
+  - vim
+  - rsync
+  - htop
+  - fail2ban
+  - initscripts
+  - tmux
+  - certbot
+  - python3-certbot-nginx
+  - certbot-dns-cloudflare
+  - nginx
+  - unzip
+
+arch_deps:
+  - logrotate
+  - vim
+  - rsync
+  - htop
+  - fail2ban
+  - tmux
+  - certbot
+  - python3-certbot-nginx
+  - certbot-dns-cloudflare
+  - nginx

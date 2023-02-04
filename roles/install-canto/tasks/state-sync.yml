@@ -1,0 +1,59 @@
+- name: Stop canto
+  systemd:
+    name: canto
+    state: stopped
+  become: true
+
+- name: Get latest block from peers
+  uri:
+    url: https://canto-rpc.polkachu.com/block
+    return_content: yes
+  register: block_data
+
+- name: Set temp facts for block height
+  set_fact:
+    latest_block: "{{ (block_data.json.result.block.header.height | int - 1000 ) - (block_data.json.result.block.header.height | int % 1000) }}"
+
+- name: Get latest snapshot from peers
+  uri:
+    url: "http://chainripper-2.althea.net:20878/block?height={{latest_block}}"
+    return_content: yes
+  register: block_data
+
+- name: Set state sync block data
+  set_fact:
+    state_sync_enabled: true
+    latest_block: "{{ block_data.json.result.block.header.height }}"
+    latest_block_hash: "{{ block_data.json.result.block_id.hash }}"
+
+- name: Reset data
+  command: "canto tendermint unsafe-reset-all --home {{canto_home}}"
+
+- name: Set seeds
+  template:
+    src: config.toml.j2
+    dest: "{{ canto_home }}/config/config.toml"
+  vars:
+    state_sync_enabled: true
+
+- name: Restart canto
+  systemd:
+    name: canto
+    state: restarted
+  become: true
+
+- name: Wait for Quick crashes
+  pause:
+    seconds: 30
+- name: Check if canto is running
+  command: systemctl status canto
+  changed_when: false
+  register: service_canto_status
+- name: Report status of canto
+  fail:
+    msg: |
+      Service canto is not running.
+      Output of `systemctl status -l canto`:
+      {{ service_canto_status.stdout }}
+      {{ service_canto_status.stderr }}
+  when: service_canto_status is failed

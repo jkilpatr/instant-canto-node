@@ -1,0 +1,16 @@
+[Unit]
+Description=Canto blockchain node
+Requires=network.target
+
+[Service]
+Type=simple
+TimeoutStartSec=10s
+Restart=always
+RestartSec=10
+ExecStart=/usr/bin/canto start --home {{canto_home}}
+LimitNOFILE=500000
+LimitNPROC=500000
+Environment="HOME=/root"
+
+[Install]
+WantedBy=default.target

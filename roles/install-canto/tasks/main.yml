@@ -1,0 +1,20 @@
+- name: Run install tasks
+  include_tasks: install.yml
+
+- name: Check if catching up
+  command: canto --node http://localhost:26655 status
+  register: canto_catching_up
+  until: canto_catching_up.rc == 0
+  retries: 6
+  delay: 10
+  ignore_errors: true
+
+- name: Set syncing check
+  set_fact:
+    sync_info: "{{(canto_catching_up.stdout | from_json).SyncInfo.catching_up}}"
+  ignore_errors: true
+
+
+- name: Run State Sync
+  include_tasks: state-sync.yml
+  when: sync_info is not defined or sync_info or mount_all is defined

@@ -1,0 +1,85 @@
+- name: Get canto binary
+  get_url:
+    url: "{{release}}"
+    dest: /usr/bin/canto
+    mode: "0755"
+  register: binary
+
+- name: Check for canto directory
+  stat:
+    path: "{{canto_home}}"
+  register: canto_directory
+
+- name: Init config files
+  command: "canto init {{moniker}} -o --chain-id {{chain_id}} --home {{canto_home}}"
+  # only when the folder does not already exist
+  when: not (canto_directory.stat.isdir is defined and canto_directory.stat.isdir)
+
+- name: Download snapshot
+  ansible.builtin.unarchive:
+    src: "{{snapshot_url}}"
+    dest: /tmp/
+    remote_src: true
+  when: not (canto_directory.stat.isdir is defined and canto_directory.stat.isdir)
+
+- name: Move snapshot into place
+  ansible.builtin.shell: "rm -rf {{canto_home}}/data ; mv /tmp/data {{canto_home}}/"
+  when: not (canto_directory.stat.isdir is defined and canto_directory.stat.isdir)
+
+- name: Template config
+  template:
+    src: config.toml.j2
+    dest: "{{canto_home}}/config/config.toml"
+  register: config
+
+- name: Template app
+  template:
+    src: app.toml.j2
+    dest: "{{canto_home}}/config/app.toml"
+  register: app
+
+- name: Template canto service file
+  template:
+    src: canto.service.j2
+    dest: /etc/systemd/system/canto.service
+  become: true
+  register: service
+
+- name: Start Firewalld
+  systemd:
+    name: firewalld
+    state: started
+  become: true
+
+- name: Open canto ports
+  firewalld:
+    port: "{{ port }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop:
+    - 26657/tcp # Open ABCI port
+    - 9091/tcp # Open Legacy API port
+    - 9090/tcp # Open gRPC port
+    - 1317/tcp # Open Web port
+    - 8545/tcp # Open ETH RPC port
+    - 8546/tcp # Open ETH Websocket port
+    - 443/tcp # Open default ssl port
+  loop_control:
+    loop_var: port
+
+- name: Restart canto
+  systemd:
+    name: canto
+    state: restarted
+    daemon_reload: yes
+    enabled: true
+  when: binary.changed or config.changed or app.changed or service.changed
+
+# after we state sync the config will always change (removing state sync details) so we need to
+# provide some time after restarts to make sure the node catches up, that way we can prevent
+# an infinite state-sync loop.
+- name: Wait for canto to be ready for requests
+  wait_for:
+    timeout: 60
+  when: binary.changed or config.changed or app.changed or service.changed

@@ -1,0 +1,25 @@
+- name: Install nginx deps
+  ansible.builtin.dnf:
+    name: nginx, vim, htop
+    state: latest
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' or ansible_distribution == 'Fedora'
+
+- name: Install nginx deps
+  ansible.builtin.apt:
+    name: nginx, vim, htop
+    state: latest
+    update_cache: yes
+  when: ansible_distribution == 'Debian'
+
+- name: Template nginx config
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  become: true
+  register: nginx_template
+
+- name: Disabling SELinux state
+  selinux:
+    state: disabled
+  register: selinux_disabled
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' or ansible_distribution == 'Fedora'

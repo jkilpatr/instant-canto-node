@@ -1,0 +1,12 @@
+---
+# An ansible playbook that recovers Canto nodes from syncing states
+
+- name: Manage Deployment of Canto
+  hosts: canto
+  user: root
+  serial: 8
+  gather_facts: yes
+  roles:
+    - packages
+    - install-canto
+    - nginx
